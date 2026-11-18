@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import EntryList from '../components/EntryList.astro';
+import { getEntries } from '../lib/entries';
+
+const entries = await getEntries();
+const years = new Map<number, typeof entries>();
+for (const e of entries) {
+  const y = e.data.published.getUTCFullYear();
+  years.set(y, [...(years.get(y) ?? []), e]);
+}
+---
+
+<Base title="Archive" description="Every entry, grouped by year.">
+  <h1>Archive</h1>
+  {
+    [...years].map(([year, list]) => (
+      <section aria-labelledby={`y${year}`}>
+        <h2 id={`y${year}`} class="mono">
+          {year}
+        </h2>
+        <EntryList entries={list} />
+      </section>
+    ))
+  }
+</Base>
+
+<style>
+  h1 {
+    font-size: var(--t-xl);
+    margin-bottom: 2rem;
+  }
+  section + section {
+    margin-top: 3rem;
+  }
+  h2 {
+    font-size: var(--t-lg);
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+</style>

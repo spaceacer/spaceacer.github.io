@@ -1,0 +1,44 @@
+---
+import { statuses } from '../data/site';
+
+interface Props {
+  status: keyof typeof statuses;
+}
+const { status } = Astro.props;
+---
+
+<span class="status mono" data-status={status} title={statuses[status].hint}>
+  <span class="dot" aria-hidden="true"></span>{statuses[status].label}
+</span>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--t-xs);
+    white-space: nowrap;
+  }
+  .dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  [data-status='seedling'] {
+    color: var(--seedling);
+  }
+  [data-status='growing'] {
+    color: var(--growing);
+  }
+  [data-status='evergreen'] {
+    color: var(--evergreen);
+  }
+  [data-status='archived'] {
+    color: var(--archived);
+  }
+  [data-status='archived'] .dot {
+    background: none;
+    border: 1.5px solid currentColor;
+  }
+</style>
