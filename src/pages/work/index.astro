@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import EntryList from '../../components/EntryList.astro';
+import { kinds, type Kind } from '../../data/site';
+import { getEntries } from '../../lib/entries';
+
+const entries = await getEntries();
+const used = (Object.keys(kinds) as Kind[]).filter((k) => entries.some((e) => e.data.kind === k));
+---
+
+<Base title="Work" description="Everything on this site, newest first.">
+  <h1>Work</h1>
+  <p class="intro muted">Everything on this site, newest first. Filter by kind:</p>
+  <ul class="kinds">
+    {
+      used.map((k) => (
+        <li>
+          <a class="mono" href={`/kinds/${k}/`}>
+            {kinds[k].plural.toLowerCase()}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <EntryList entries={entries} showSummary />
+</Base>
+
+<style>
+  h1 {
+    font-size: var(--t-xl);
+  }
+  .intro {
+    margin: 0.75rem 0 1rem;
+  }
+  .kinds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0 0 2rem;
+    padding: 0;
+  }
+  .kinds a {
+    display: inline-block;
+    font-size: var(--t-sm);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    background: var(--sheet);
+    padding: 0.3rem 0.7rem;
+    text-decoration: none;
+  }
+  .kinds a:hover {
+    color: var(--blue);
+    border-color: var(--blue);
+  }
+</style>

@@ -1,0 +1,165 @@
+---
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import EntryList from '../components/EntryList.astro';
+import TopicChips from '../components/TopicChips.astro';
+import { site } from '../data/site';
+import { getEntries, topicsOf, urlOf, isoDate } from '../lib/entries';
+
+const entries = await getEntries();
+const recent = entries.slice(0, 8);
+const ventures = entries.filter((e) => e.data.kind === 'venture' && e.data.visibility !== 'classified');
+const topics = topicsOf(entries).slice(0, 14);
+const now = await getEntry('pages', 'now');
+---
+
+<Base>
+  <section class="intro">
+    <div class="lead">
+      <h1>{site.tagline}</h1>
+      <p>{site.description}</p>
+    </div>
+    {
+      now && (
+        <aside class="now" aria-labelledby="now-title">
+          <h2 id="now-title" class="mono">
+            <a href="/now/">Now</a>
+            {now.data.updated && <span class="muted">updated {isoDate(now.data.updated)}</span>}
+          </h2>
+          <ul>
+            {now.data.items.map((i) => (
+              <li>{i}</li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+  </section>
+
+  <section class="block" aria-labelledby="topics-title">
+    <div class="head">
+      <h2 id="topics-title">Topics</h2>
+      <a href="/topics/">All topics</a>
+    </div>
+    <TopicChips topics={topics} />
+  </section>
+  {
+    ventures.length > 0 && (
+      <section class="block" aria-labelledby="ventures-title">
+        <div class="head">
+          <h2 id="ventures-title">Ventures</h2>
+          <a href="/kinds/venture/">All ventures</a>
+        </div>
+        <ul class="ventures">
+          {ventures.map((v) => (
+            <li>
+              <a href={urlOf(v)}>{v.data.title}</a>
+              {v.data.summary && <p>{v.data.summary}</p>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <section class="block" aria-labelledby="log-title">
+    <div class="head">
+      <h2 id="log-title">Log</h2>
+      <a href="/work/">Everything, newest first</a>
+    </div>
+    <EntryList entries={recent} />
+  </section>
+
+</Base>
+
+<style>
+  .intro {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.5rem;
+    align-items: flex-start;
+    margin-bottom: 4rem;
+  }
+  .lead {
+    flex: 999 1 30rem;
+    min-width: 0;
+  }
+  h1 {
+    font-size: var(--t-xxl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+  }
+  .lead p {
+    font-size: var(--t-md);
+    color: var(--graphite);
+    max-width: 38rem;
+    margin: 1.25rem 0 0;
+  }
+  .now {
+    flex: 1 1 16rem;
+    min-width: 0;
+    background: var(--sheet);
+    border: 1.5px solid var(--ink);
+    padding: 1.25rem;
+  }
+  .now h2 {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: var(--t-xs);
+    font-weight: 500;
+  }
+  .now h2 a {
+    color: var(--blue);
+  }
+  .now ul {
+    margin: 0.75rem 0 0;
+    padding-left: 1.1rem;
+    font-size: var(--t-sm);
+  }
+  .now li + li {
+    margin-top: 0.4rem;
+  }
+  .block + .block {
+    margin-top: 3.5rem;
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .head h2 {
+    font-size: var(--t-lg);
+  }
+  .head a {
+    font-size: var(--t-sm);
+  }
+  .ventures {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+  }
+  .ventures li {
+    background: var(--sheet);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--blue);
+    padding: 1rem 1.25rem;
+  }
+  .ventures a {
+    font-weight: 600;
+    font-size: var(--t-md);
+    color: var(--ink);
+  }
+  .ventures p {
+    margin: 0.4rem 0 0;
+    color: var(--graphite);
+    font-size: var(--t-sm);
+  }
+</style>

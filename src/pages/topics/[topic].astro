@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import EntryList from '../../components/EntryList.astro';
+import { getEntries, topicsOf, topicSlug } from '../../lib/entries';
+
+export async function getStaticPaths() {
+  const entries = await getEntries();
+  return topicsOf(entries).map((t) => ({
+    params: { topic: t.slug },
+    props: {
+      name: t.name,
+      entries: entries.filter(
+        (e) => e.data.visibility !== 'classified' && e.data.topics.some((x) => topicSlug(x) === t.slug),
+      ),
+    },
+  }));
+}
+
+const { name, entries } = Astro.props;
+---
+
+<Base title={`#${name}`} description={`Everything about ${name}.`}>
+  <p class="mono back"><a href="/topics/">All topics</a></p>
+  <h1 class="mono">#{name}</h1>
+  <EntryList entries={entries} showSummary />
+</Base>
+
+<style>
+  .back {
+    font-size: var(--t-xs);
+    margin: 0 0 0.5rem;
+  }
+  h1 {
+    font-size: var(--t-xl);
+    font-weight: 500;
+    color: var(--blue);
+    margin-bottom: 1.5rem;
+  }
+</style>

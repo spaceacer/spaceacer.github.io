@@ -1,0 +1,197 @@
+---
+import { render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Status from '../../components/Status.astro';
+import TopicChips from '../../components/TopicChips.astro';
+import StlViewer from '../../components/StlViewer.astro';
+import EntryList from '../../components/EntryList.astro';
+import { kinds } from '../../data/site';
+import { getEntries, hasPage, slugOf, relatedTo, isoDate, type Entry } from '../../lib/entries';
+
+export async function getStaticPaths() {
+  const entries = await getEntries();
+  return entries.filter(hasPage).map((entry) => ({ params: { slug: slugOf(entry) }, props: { entry } }));
+}
+
+const { entry } = Astro.props as { entry: Entry };
+const d = entry.data;
+const isPreview = d.visibility === 'preview';
+const { Content } = await render(entry);
+const related = relatedTo(entry, await getEntries());
+---
+
+<Base title={d.title} description={d.summary}>
+  <article data-pagefind-body>
+    <header class="entry-head">
+      <p class="meta mono" data-pagefind-ignore>
+        <a href={`/kinds/${d.kind}/`}>{kinds[d.kind].label.toLowerCase()}</a>
+        <Status status={d.status} />
+        {isPreview && <span class="private">sneak peek</span>}
+      </p>
+      <h1>{d.title}</h1>
+      {d.summary && <p class="summary">{d.summary}</p>}
+
+      <dl class="spec mono" data-pagefind-ignore>
+        {
+          d.started && (
+            <div>
+              <dt>started</dt>
+              <dd>
+                <time datetime={isoDate(d.started)}>{isoDate(d.started)}</time>
+              </dd>
+            </div>
+          )
+        }
+        <div>
+          <dt>published</dt>
+          <dd><time datetime={isoDate(d.published)}>{isoDate(d.published)}</time></dd>
+        </div>
+        {
+          d.updated && (
+            <div>
+              <dt>updated</dt>
+              <dd>
+                <time datetime={isoDate(d.updated)}>{isoDate(d.updated)}</time>
+              </dd>
+            </div>
+          )
+        }
+        {
+          d.links.length > 0 && (
+            <div>
+              <dt>links</dt>
+              <dd class="links">
+                {d.links.map((l) => (
+                  <a href={l.url}>{l.label}</a>
+                ))}
+              </dd>
+            </div>
+          )
+        }
+      </dl>
+    </header>
+
+    {
+      d.cover && (
+        <Image
+          class="cover"
+          src={d.cover}
+          alt={d.coverAlt ?? ''}
+          widths={[640, 960, 1280]}
+          sizes="(min-width: 64rem) 64rem, 100vw"
+        />
+      )
+    }
+
+    {d.model && <StlViewer src={d.model} caption={d.title} />}
+
+    {
+      isPreview ? (
+        <p class="notice">
+          This is a private project. Only this sneak peek is public; the details stay offline for now.
+        </p>
+      ) : (
+        <div class="prose">
+          <Content components={{ StlViewer }} />
+        </div>
+      )
+    }
+
+    {
+      d.topics.length > 0 && (
+        <section class="after" aria-labelledby="topics-h">
+          <h2 id="topics-h">Topics</h2>
+          <TopicChips topics={d.topics.map((name) => ({ name }))} />
+        </section>
+      )
+    }
+
+    {
+      related.length > 0 && (
+        <section class="after" aria-labelledby="related-h" data-pagefind-ignore>
+          <h2 id="related-h">Related</h2>
+          <EntryList entries={related} />
+        </section>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .entry-head {
+    margin-bottom: 2.5rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin: 0 0 1rem;
+    font-size: var(--t-xs);
+  }
+  .meta > a {
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 0 0.45rem;
+    text-decoration: none;
+  }
+  .private {
+    color: var(--graphite);
+    border: 1px dashed var(--graphite);
+    padding: 0 0.45rem;
+  }
+  h1 {
+    font-size: var(--t-xl);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    max-width: 24ch;
+  }
+  .summary {
+    font-size: var(--t-md);
+    color: var(--graphite);
+    max-width: var(--measure);
+    margin: 1rem 0 0;
+  }
+  .spec {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    margin: 1.75rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    font-size: var(--t-xs);
+  }
+  .spec dt {
+    color: var(--graphite);
+  }
+  .spec dd {
+    margin: 0.15rem 0 0;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+  }
+  .cover {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--rule);
+    margin-bottom: 2rem;
+  }
+  .notice {
+    max-width: var(--measure);
+    background: var(--sheet);
+    border: 1px dashed var(--graphite);
+    padding: 1rem 1.25rem;
+    color: var(--graphite);
+  }
+  .after {
+    margin-top: 3.5rem;
+  }
+  .after h2 {
+    font-size: var(--t-lg);
+    margin-bottom: 0.9rem;
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import TopicChips from '../../components/TopicChips.astro';
+import { getEntries, topicsOf } from '../../lib/entries';
+
+const topics = topicsOf(await getEntries());
+---
+
+<Base title="Topics" description="Everything grouped by what it is about.">
+  <h1>Topics</h1>
+  <p class="muted intro">What the work is about. The number is how many entries share a topic.</p>
+  <TopicChips topics={topics} />
+</Base>
+
+<style>
+  h1 {
+    font-size: var(--t-xl);
+  }
+  .intro {
+    margin: 0.75rem 0 1.5rem;
+  }
+</style>

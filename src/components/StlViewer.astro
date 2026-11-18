@@ -1,0 +1,132 @@
+---
+/**
+ * Interactive 3D viewer for an STL file in /public (for example "/models/part.stl").
+ * Use it on an entry by setting `model:` in its front matter, or inside an .mdx
+ * entry: <StlViewer src="/models/part.stl" caption="..." />
+ */
+interface Props {
+  src: string;
+  caption?: string;
+  height?: number;
+}
+const { src, caption, height = 420 } = Astro.props;
+---
+
+<figure class="stl">
+  <stl-viewer data-src={src} style={`--h:${height}px`}>
+    <p class="mono hint">Loading 3D model…</p>
+  </stl-viewer>
+  <figcaption class="mono">
+    {caption && <span>{caption}</span>}
+    <span class="muted">Drag to rotate, scroll or pinch to zoom.</span>
+    <a href={src} download>Download STL</a>
+  </figcaption>
+</figure>
+
+<script>
+  class StlViewerElement extends HTMLElement {
+    private started = false;
+
+    connectedCallback() {
+      const io = new IntersectionObserver((items) => {
+        if (items.some((i) => i.isIntersecting) && !this.started) {
+          this.started = true;
+          io.disconnect();
+          this.init().catch(() => {
+            this.innerHTML = '<p class="mono hint">This model could not be shown. Use the download link instead.</p>';
+          });
+        }
+      });
+      io.observe(this);
+    }
+
+    async init() {
+      const THREE = await import('three');
+      const { STLLoader } = await import('three/examples/jsm/loaders/STLLoader.js');
+      const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+
+      const css = getComputedStyle(document.documentElement);
+      const ink = css.getPropertyValue('--blue').trim() || '#1e4fc2';
+
+      const geometry = await new STLLoader().loadAsync(this.dataset.src!);
+      geometry.computeVertexNormals();
+      geometry.center();
+      geometry.computeBoundingSphere();
+      const r = geometry.boundingSphere?.radius || 1;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(35, 1, r / 100, r * 100);
+      camera.position.set(r * 1.8, r * 1.2, r * 2.4);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.innerHTML = '';
+      this.appendChild(renderer.domElement);
+
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 2.2));
+      const key = new THREE.DirectionalLight(0xffffff, 1.6);
+      key.position.set(1, 2, 3);
+      scene.add(key);
+
+      const mesh = new THREE.Mesh(
+        geometry,
+        new THREE.MeshStandardMaterial({ color: new THREE.Color(ink), metalness: 0.15, roughness: 0.55 }),
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      scene.add(mesh);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      const resize = () => {
+        const w = this.clientWidth;
+        const h = this.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      };
+      new ResizeObserver(resize).observe(this);
+      resize();
+
+      const loop = () => {
+        controls.update();
+        renderer.render(scene, camera);
+        requestAnimationFrame(loop);
+      };
+      loop();
+    }
+  }
+  if (!customElements.get('stl-viewer')) customElements.define('stl-viewer', StlViewerElement);
+</script>
+
+<style>
+  .stl {
+    margin: 2rem 0;
+  }
+  stl-viewer {
+    display: block;
+    position: relative;
+    height: var(--h);
+    background: var(--sheet);
+    border: 1px solid var(--rule);
+    touch-action: none;
+  }
+  stl-viewer :global(canvas) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .hint {
+    margin: 0;
+    padding: 1rem;
+    font-size: var(--t-sm);
+    color: var(--graphite);
+  }
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    font-size: var(--t-xs);
+    margin-top: 0.5rem;
+  }
+</style>

@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Search" description="Search everything on this site.">
+  <h1>Search</h1>
+  <div id="search" data-pagefind-ignore></div>
+  <noscript><p class="muted">Search needs JavaScript. The <a href="/archive/">archive</a> lists everything.</p></noscript>
+</Base>
+
+<link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+<script is:inline src="/pagefind/pagefind-ui.js"></script>
+<script is:inline>
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.PagefindUI) {
+      new PagefindUI({ element: '#search', showSubResults: true, showImages: false });
+    } else {
+      document.getElementById('search').innerHTML =
+        '<p>Search is built when the site is published. Run <code>npm run build</code> and <code>npm run preview</code> to try it locally.</p>';
+    }
+  });
+</script>
+
+<style>
+  h1 {
+    font-size: var(--t-xl);
+    margin-bottom: 1.5rem;
+  }
+  #search {
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: var(--blue);
+    --pagefind-ui-text: var(--ink);
+    --pagefind-ui-background: var(--sheet);
+    --pagefind-ui-border: var(--rule);
+    --pagefind-ui-tag: var(--blue-soft);
+    --pagefind-ui-border-radius: 0;
+    --pagefind-ui-font: var(--sans);
+    max-width: var(--measure);
+  }
+</style>

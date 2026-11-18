@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import EntryList from '../../components/EntryList.astro';
+import { kinds, type Kind } from '../../data/site';
+import { getEntries } from '../../lib/entries';
+
+export async function getStaticPaths() {
+  const entries = await getEntries();
+  return (Object.keys(kinds) as Kind[]).map((kind) => ({
+    params: { kind },
+    props: { kind, entries: entries.filter((e) => e.data.kind === kind) },
+  }));
+}
+
+const { kind, entries } = Astro.props;
+const label = kinds[kind as Kind].plural;
+---
+
+<Base title={label} description={`${label}, newest first.`}>
+  <p class="mono back"><a href="/work/">All work</a></p>
+  <h1>{label}</h1>
+  <EntryList entries={entries} showSummary empty={`No ${label.toLowerCase()} yet.`} />
+</Base>
+
+<style>
+  .back {
+    font-size: var(--t-xs);
+    margin: 0 0 0.5rem;
+  }
+  h1 {
+    font-size: var(--t-xl);
+    margin-bottom: 1.5rem;
+  }
+</style>
