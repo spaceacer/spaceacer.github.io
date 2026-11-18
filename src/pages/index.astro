@@ -36,14 +36,13 @@ const now = await getEntry('pages', 'now');
     }
   </section>
 
-  <section class="block" aria-labelledby="log-title">
+  <section class="block" aria-labelledby="topics-title">
     <div class="head">
-      <h2 id="log-title">Log</h2>
-      <a href="/work/">Everything, newest first</a>
+      <h2 id="topics-title">Topics</h2>
+      <a href="/topics/">All topics</a>
     </div>
-    <EntryList entries={recent} />
+    <TopicChips topics={topics} />
   </section>
-
   {
     ventures.length > 0 && (
       <section class="block" aria-labelledby="ventures-title">
@@ -63,13 +62,14 @@ const now = await getEntry('pages', 'now');
     )
   }
 
-  <section class="block" aria-labelledby="topics-title">
+  <section class="block" aria-labelledby="log-title">
     <div class="head">
-      <h2 id="topics-title">Topics</h2>
-      <a href="/topics/">All topics</a>
+      <h2 id="log-title">Log</h2>
+      <a href="/work/">Everything, newest first</a>
     </div>
-    <TopicChips topics={topics} />
+    <EntryList entries={recent} />
   </section>
+
 </Base>
 
 <style>
